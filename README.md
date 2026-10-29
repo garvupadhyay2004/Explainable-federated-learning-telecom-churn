@@ -1,24 +1,25 @@
 # Explainable Federated Learning Framework for Predicting Customer Churn in Telecom Networks
 
-An experimental machine learning framework that compares centralized and simulated federated learning approaches for telecom customer churn prediction, with model evaluation and explainability using SHAP.
+An academic machine learning project that compares centralized learning with simulated federated learning for telecom customer churn prediction, with model evaluation, explainable AI (SHAP), and classification-threshold analysis.
 
 ## Overview
 
-Customer churn is an important challenge in the telecommunications industry. Predicting which customers may leave can help organizations understand churn patterns and make better-informed retention decisions.
+Customer churn prediction helps telecommunications companies identify customers who may discontinue their services. This project explores machine learning approaches for predicting churn while investigating model interpretability and the trade-offs involved in detecting potential churners.
 
-This project implements a centralized Logistic Regression baseline and a simulated federated learning approach. It evaluates both approaches using classification metrics and uses SHAP to explain the centralized model's predictions.
+The framework implements a centralized Logistic Regression baseline and a custom simulated Federated Averaging (FedAvg) workflow. It evaluates both approaches using standard classification metrics and uses SHAP to explain the centralized model's predictions.
 
-The project is developed as an academic capstone prototype using the publicly available IBM Telco Customer Churn dataset.
+A separate threshold-validation experiment investigates how changing classification thresholds affects precision, recall, F1-score, and accuracy.
 
 ## Objectives
 
-- Build a machine learning model to predict customer churn.
-- Establish a centralized learning baseline.
-- Implement a simulated federated learning workflow using multiple clients and parameter aggregation.
-- Compare model performance using Accuracy, Precision, Recall, F1-score, and ROC-AUC.
+- Develop a machine learning model for customer churn prediction.
+- Establish a centralized Logistic Regression baseline.
+- Implement a simulated federated learning workflow with multiple clients.
+- Compare model performance using standard classification metrics.
 - Analyze feature importance using permutation importance.
-- Explain global feature influence and an individual prediction using SHAP.
-- Document the limitations of the current implementation and identify future improvements.
+- Explain global feature influence and individual predictions using SHAP.
+- Evaluate validation-selected classification thresholds and their impact on churn detection.
+- Document implementation limitations and potential future improvements.
 
 ## Current Implementation
 
@@ -27,86 +28,120 @@ The project is developed as an academic capstone prototype using the publicly av
 | Dataset | IBM Telco Customer Churn |
 | Data preprocessing | Missing-value imputation, categorical encoding, numerical scaling |
 | Centralized model | Logistic Regression |
-| Federated learning | Custom simulated federated training with weighted parameter averaging |
+| Federated learning | Custom simulated FedAvg training |
 | Simulated clients | 3 |
 | Federated training rounds | 12 |
-| Evaluation | Accuracy, Precision, Recall, F1-score, ROC-AUC |
+| Evaluation metrics | Accuracy, Precision, Recall, F1-score, ROC-AUC |
 | Feature importance | Permutation importance |
-| Explainability | SHAP for the centralized model |
-| Outputs | CSV result files and PNG visualizations |
+| Explainability | Global and individual SHAP explanations for the centralized model |
+| Threshold experiment | Validation-based threshold selection for centralized and federated models |
+| Dashboard | Streamlit application |
+| Outputs | CSV results and PNG visualizations |
 
 ## Dataset
 
 **Source:** [IBM Telco Customer Churn Dataset](https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv)
 
 - **Records:** 7,043
-- **Attributes:** 21 columns in the original CSV
-- **Prediction target:** `Churn`
+- **Original columns:** 21
+- **Target variable:** `Churn`
 - **Target classes:** `Yes` and `No`
 
 The dataset contains customer information related to services, account characteristics, billing, and churn status.
 
-The target is converted into a binary variable for model training. The `customerID` column is excluded from the model features, and `TotalCharges` is converted to a numeric representation during preprocessing.
+The `customerID` column is excluded from model features, and `TotalCharges` is converted to a numeric representation during preprocessing.
 
-The dataset is publicly available. This project does not establish that the records represent current, live telecom customers.
+This is a publicly available dataset used for experimentation. This project does not establish that the records represent current, live telecom customers.
+
+The dataset file is maintained in the repository root:
+
+```text
+Telco-Customer-Churn.csv
+```
 
 ## Methodology
 
 ### 1. Data preprocessing
 
-The implementation prepares the data for machine learning by:
+The workflow includes:
 
 - Cleaning the churn target.
-- Converting `TotalCharges` to a numeric type.
-- Separating the target variable from the input features.
-- Creating a stratified 80:20 training and testing split.
+- Converting `TotalCharges` to numeric format.
+- Separating target and input features.
 - Imputing missing numerical and categorical values.
-- Scaling numerical features and one-hot encoding categorical features.
+- Scaling numerical features.
+- One-hot encoding categorical features.
 
-The current implementation fits preprocessing transformations on the training split before simulating the federated clients. This is a limitation to address in a more realistic federated setup.
+The original baseline experiment uses a stratified 80:20 training-test split.
+
+The separate threshold experiment uses a stratified training-validation-test split. Its preprocessing transformations are fitted on the training partition before evaluation.
 
 ### 2. Centralized learning
 
-A Logistic Regression classifier is trained on the centralized training data. Class weighting is used to account for the imbalance between churn and non-churn customers.
+A Logistic Regression classifier is trained using centralized training data. Class weighting is used to account for the imbalance between churn and non-churn customers.
 
-This model serves as the baseline for evaluating the simulated federated approach.
+This model serves as the baseline for comparison with the simulated federated approach.
 
 ### 3. Simulated federated learning
 
-The project implements a custom federated-style training workflow:
+The custom federated workflow follows these steps:
 
-1. The training data is divided among three simulated clients.
-2. Each client performs local model updates.
-3. Client model parameters are aggregated using sample-count-weighted averaging.
-4. The process repeats over 12 communication rounds.
-5. The resulting model is evaluated on the held-out test set.
+1. Divide the training data among three simulated clients.
+2. Perform local model updates at each client.
+3. Aggregate client parameters using sample-count-weighted averaging.
+4. Repeat the aggregation process over 12 communication rounds.
+5. Evaluate the resulting model on held-out test data.
 
-The clients are simulated on one computer. The implementation does not currently demonstrate communication between independent telecom organizations or provide formal privacy guarantees.
+The clients are simulated on a single computer. The implementation does not demonstrate communication between independent telecom organizations or devices.
 
 ### 4. Model evaluation
 
-The centralized and federated models are evaluated using:
+The models are evaluated using:
 
-- **Accuracy:** Overall proportion of correct predictions.
+- **Accuracy:** Proportion of all predictions that are correct.
 - **Precision:** Proportion of predicted churn cases that are actual churn cases.
-- **Recall:** Proportion of actual churn cases detected by the model.
+- **Recall:** Proportion of actual churn cases detected.
 - **F1-score:** Harmonic mean of precision and recall.
-- **ROC-AUC:** Ability to distinguish between the two classes across classification thresholds.
+- **ROC-AUC:** Ability to rank churn cases above non-churn cases across classification thresholds.
 
 ### 5. Explainable AI
 
-**Permutation importance** measures how model performance changes when individual features are shuffled.
+**Permutation importance** evaluates how model performance changes when individual features are shuffled.
 
-**SHAP (SHapley Additive exPlanations)** is used to analyze the centralized model's predictions through:
+**SHAP (SHapley Additive exPlanations)** is used to explain the centralized model through:
 
 - Global feature importance based on mean absolute SHAP values.
-- Individual prediction explanations showing each feature's contribution to the model output.
+- Individual prediction explanations showing feature contributions to model output.
 
-SHAP explanations are currently generated for the centralized model only. Feature contributions describe model behavior and should not be interpreted as proof of causal relationships.
+SHAP explanations are currently generated for the centralized model only. Feature contributions describe model behavior and do not establish causal relationships.
+
+### 6. Classification-threshold experiment
+
+A separate experiment evaluates the effect of selecting classification thresholds using validation data.
+
+The dataset was divided as follows:
+
+| Partition | Records |
+|---|---:|
+| Training | 4,507 |
+| Validation | 1,127 |
+| Final test | 1,409 |
+| **Total** | **7,043** |
+
+The threshold for each model was selected using the validation set to maximize F1-score among the tested thresholds. The selected thresholds were then evaluated on the final test set.
+
+Selected thresholds:
+
+- **Centralized Logistic Regression:** 0.62
+- **Simulated federated model:** 0.33
+
+The threshold-selection process uses validation data rather than selecting thresholds from final test results.
 
 ## Experimental Results
 
-The following results were obtained from the current implementation on the held-out test split.
+### Experiment 1: Original baseline
+
+The following metrics were obtained from the original held-out test split.
 
 | Metric | Centralized Logistic Regression | Simulated Federated Model |
 |---|---:|---:|
@@ -116,17 +151,43 @@ The following results were obtained from the current implementation on the held-
 | F1-score | 0.6136 | 0.3785 |
 | ROC-AUC | 0.8413 | 0.8363 |
 
-### Interpretation
+#### Interpretation
 
-The simulated federated model achieved higher accuracy and precision in this experiment. However, its recall and F1-score were substantially lower than those of the centralized baseline.
+The simulated federated model achieved higher accuracy and precision in this experiment. However, its recall and F1-score were lower than those of the centralized baseline.
 
-This means the federated model missed a larger proportion of actual churn cases at the default classification threshold. Consequently, the results do **not** demonstrate that federated learning is universally better than centralized learning.
+At the default classification threshold, the federated model missed a larger proportion of actual churn cases. The results therefore do not demonstrate that federated learning is universally better than centralized learning.
 
-The difference may be affected by the models' training procedures, optimization settings, class weighting, and the single train-test split used. Further controlled experiments are needed before drawing broader conclusions.
+### Experiment 2: Threshold-validation results
 
-### SHAP and feature importance
+The following results were obtained from the final test partition of the separate threshold experiment.
 
-The current global SHAP analysis identifies the following among the most influential features for the centralized model:
+| Model | Threshold | Accuracy | Precision | Recall | F1-score | ROC-AUC |
+|---|---:|---:|---:|---:|---:|---:|
+| Centralized | 0.50 | 0.7417 | 0.5086 | 0.7888 | 0.6184 | 0.8421 |
+| Centralized | 0.62 | 0.7708 | 0.5544 | 0.6952 | 0.6168 | 0.8421 |
+| Simulated Federated | 0.50 | 0.7771 | 0.7344 | 0.2513 | 0.3745 | 0.8362 |
+| Simulated Federated | 0.33 | 0.7523 | 0.5234 | 0.7487 | 0.6161 | 0.8362 |
+
+#### Interpretation
+
+For the simulated federated model, reducing the threshold from 0.50 to 0.33 increased:
+
+- **Recall:** 25.13% to 74.87%.
+- **F1-score:** 37.45% to 61.61%.
+
+Precision decreased from 73.44% to 52.34%, while accuracy decreased from 77.71% to 75.23%.
+
+For the centralized model, the validation-selected threshold of 0.62 increased accuracy compared with the default threshold, while F1-score decreased slightly.
+
+ROC-AUC remained unchanged within each model because changing the classification threshold does not change the underlying prediction scores or their ranking.
+
+These results illustrate the trade-off between detecting more churn cases and generating additional false-positive predictions. They are specific to this experiment and do not establish universal superiority of either approach.
+
+**Important:** The original baseline and threshold-validation results come from different train-test splits and should not be compared as though they were one experiment.
+
+## SHAP Findings
+
+The global SHAP analysis identified the following among the most influential features for the centralized model:
 
 1. `tenure`
 2. `MonthlyCharges`
@@ -134,34 +195,42 @@ The current global SHAP analysis identifies the following among the most influen
 4. `InternetService_Fiber optic`
 5. `Contract_Month-to-month`
 
-These rankings reflect the trained model's behavior on the analyzed data. They do not establish that these features independently cause customer churn.
+These rankings reflect the behavior of the trained centralized model on the analyzed data. They do not prove that these features independently cause churn.
 
 ## Project Structure
 
+The repository contains the following main files and result artifacts:
+
 ```text
-explainable-federated-learning-telecom-churn/
-│
+Explainable-federated-learning-telecom-churn/
+├── app.py
 ├── train.py
 ├── train_with_shap.py
+├── threshold_validation_experiment.py
 ├── requirements.txt
 ├── README.md
-│
-├── data/
-│   └── Telco-Customer-Churn.csv
-│
-└── outputs/
+├── .gitignore
+├── Telco-Customer-Churn.csv
+├── Capstone_Phase_II_Progress_Report.docx
+├── Capstone_Report(till phase 3 ).pdf
+└── Output/
+    ├── central_validation_thresholds.csv
+    ├── fedavg_validation_thresholds.csv
+    ├── test_threshold_comparison.csv
+    ├── test_confusion_matrices.csv
     ├── model_comparison.csv
     ├── confusion_matrices.png
+    ├── example_prediction.csv
     ├── feature_importance.csv
     ├── feature_importance.png
     ├── shap_global_importance.csv
     ├── shap_global_importance.png
     ├── shap_individual_explanation.csv
     ├── shap_individual_explanation.png
-    └── example_prediction.csv
+    └── ...
 ```
 
-This is the intended project structure. Keep only files that actually exist in your repository, and update the list if your local filenames differ.
+The structure reflects the files shown in the repository screenshots. The `Output/` folder contains generated results and visualizations. Exact filenames and paths should be checked against the current repository and source code.
 
 ## Installation and Execution
 
@@ -171,16 +240,16 @@ This is the intended project structure. Keep only files that actually exist in y
 - pip.
 - The project source files and dataset.
 
-### Step 1: Clone the repository
+### 1. Clone the repository
 
-Replace the URL below with your actual GitHub repository URL.
+Replace the placeholder with the actual GitHub repository URL.
 
 ```bash
 git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd explainable-federated-learning-telecom-churn
+cd Explainable-federated-learning-telecom-churn
 ```
 
-### Step 2: Create and activate a virtual environment
+### 2. Create and activate a virtual environment
 
 **Windows PowerShell:**
 
@@ -189,82 +258,90 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-### Step 3: Install dependencies
-
-If `requirements.txt` is present and contains the required packages:
+### 3. Install dependencies
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-### Step 4: Prepare the dataset
+### 4. Prepare the dataset
 
-Place the downloaded CSV at:
+The dataset must remain in the repository root:
 
 ```text
-data/Telco-Customer-Churn.csv
+Telco-Customer-Churn.csv
 ```
 
-Ensure the dataset path matches the path configured in the Python script.
+Ensure that `train.py`, `train_with_shap.py`, and `threshold_validation_experiment.py` all load the dataset from this location. No separate `data/` directory is required.
 
-### Step 5: Run the baseline experiment
+### 5. Run the baseline experiment
 
 ```bash
 python train.py
 ```
 
-### Step 6: Run the explainability experiment
+### 6. Run the explainability experiment
 
 ```bash
 python train_with_shap.py
 ```
 
-The explainability script requires SHAP and the other dependencies used by the project. The scripts generate evaluation results and visualizations in the configured output directory.
+### 7. Run the threshold-validation experiment
 
-Run the scripts from the project root directory. Exact dependency versions should be documented in `requirements.txt` after checking the environment used for the successful run.
+```bash
+python threshold_validation_experiment.py
+```
+
+The threshold experiment generates CSV files containing validation-selected thresholds, final test comparisons, and confusion-matrix data in its configured output directory.
+
+### 8. Launch the Streamlit dashboard
+
+```bash
+python -m streamlit run app.py
+```
+
+The dashboard displays the features and results implemented in the current version of `app.py`. Threshold-experiment results should only be considered part of the dashboard if the application explicitly loads and displays them.
+
+Run the commands from the project root. Check `requirements.txt` for the actual dependencies and versions used in the working environment.
 
 ## Limitations
 
-The current prototype has several limitations:
-
 - **Simulated clients:** Federated training is simulated locally rather than deployed across independent organizations or devices.
-- **Privacy:** Local training and parameter aggregation alone do not guarantee privacy. Secure aggregation and differential privacy have not been implemented.
-- **Preprocessing:** Preprocessing is fitted before the training data is partitioned among simulated clients.
-- **Model comparability:** The centralized and federated implementations use different training procedures, so their results are not a perfectly controlled comparison.
-- **Evaluation:** Results are based on a single stratified train-test split and a fixed classification threshold.
-- **Explainability coverage:** SHAP currently explains the centralized model, not the federated model.
-- **Real-world applicability:** The experiment does not establish production readiness or demonstrate actual churn reduction from a retention campaign.
+- **Privacy:** Secure aggregation and differential privacy have not been implemented. Local training and parameter aggregation alone do not guarantee privacy.
+- **Preprocessing:** The original baseline fits preprocessing transformations before dividing the training data among simulated clients. The threshold experiment fits its transformations on the training partition before evaluation.
+- **Model comparability:** The centralized and federated implementations use different training procedures, so the comparison is not perfectly controlled.
+- **Evaluation robustness:** Repeated-seed experiments have not been established.
+- **Threshold generalization:** Validation-selected thresholds may not generalize to other datasets or deployment populations.
+- **Explainability coverage:** SHAP explanations are currently limited to the centralized model.
+- **Real-world applicability:** The prototype does not establish production readiness or demonstrate actual churn reduction from a retention campaign.
 
-These limitations should be considered when interpreting the reported metrics.
+These limitations should be considered when interpreting the results.
 
 ## Future Work
 
 Potential extensions include:
 
-- Improving the fairness of the centralized-versus-federated comparison by aligning model objectives and evaluation settings.
-- Evaluating performance across multiple random seeds and train-test splits.
-- Tuning the classification threshold and analyzing precision-recall trade-offs.
+- Improving the fairness of the centralized-versus-federated comparison by aligning training objectives and evaluation settings.
+- Evaluating performance across multiple random seeds and data splits.
+- Testing additional threshold-selection strategies and precision-recall trade-offs.
 - Implementing client-specific preprocessing and more realistic non-IID data partitions.
 - Exploring secure aggregation and differential privacy.
 - Extending explainability to the federated model where technically appropriate.
-- Evaluating the framework on additional datasets and investigating its usefulness for retention decisions.
+- Evaluating the framework on additional datasets.
+- Investigating how model predictions could support customer-retention decisions.
 
 These are proposed extensions, not claims of completed implementation.
 
 ## Technologies Used
 
-Python, pandas, NumPy, scikit-learn, SHAP, Matplotlib, and CSV-based experiment outputs.
+Python, pandas, NumPy, scikit-learn, SHAP, Matplotlib, Streamlit, and CSV-based experiment outputs.
 
 ## Academic Project
 
 **Project title:** Explainable Federated Learning Framework for Predicting Customer Churn in Telecom Networks
 
-**Project type:** B.Tech Computer Science Engineering capstone project
+**Degree:** B.Tech Computer Science Engineering
 
-The repository is intended to document the implementation, experiments, results, and limitations of the academic prototype.
+**Project type:** Academic capstone project
 
-## Reproducibility and Integrity
-
-The reported results correspond to the current local implementation and its recorded experimental settings. They should be reproduced by running the scripts in the documented environment before being treated as independently verified.
-
-Only implemented and tested functionality should be described as completed. Planned enhancements are identified separately from current functionality.
+This repository documents the implementation, experimental results, explainability analysis, and limitations of the project prototype.
