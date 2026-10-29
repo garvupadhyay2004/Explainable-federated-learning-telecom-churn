@@ -1,0 +1,5 @@
+model,TN,FP,FN,TP
+Centralized - threshold 0.50,750,285,79,295
+Centralized - tuned threshold,826,209,114,260
+FedAvg - threshold 0.50,1001,34,280,94
+FedAvg - tuned threshold,780,255,94,280
