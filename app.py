@@ -16,7 +16,11 @@ so the outputs are already available. The first run may need internet access to 
 
 if st.button("Run experiment", type="primary"):
     with st.spinner("Training centralized and federated models; this may take a minute..."):
-        result = subprocess.run([sys.executable, "train.py"], capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, "train_with_shap.py"],
+            capture_output=True,
+            text=True
+        )
     st.code(result.stdout or "(No standard output)")
     if result.returncode != 0:
         st.error("The experiment failed. Check the error below.")
@@ -36,3 +40,17 @@ if os.path.exists("outputs/feature_importance.png"):
 if os.path.exists("outputs/example_prediction.csv"):
     st.subheader("Example prediction")
     st.dataframe(pd.read_csv("outputs/example_prediction.csv"), use_container_width=True)
+if os.path.exists("outputs/shap_global_importance.png"):
+    st.subheader("Global SHAP Importance")
+    st.image("outputs/shap_global_importance.png", use_container_width=True)
+
+if os.path.exists("outputs/shap_individual_explanation.png"):
+    st.subheader("Individual SHAP Explanation")
+    st.image("outputs/shap_individual_explanation.png", use_container_width=True)
+
+if os.path.exists("outputs/shap_global_importance.csv"):
+    st.subheader("Global SHAP Values")
+    st.dataframe(
+        pd.read_csv("outputs/shap_global_importance.csv"),
+        use_container_width=True
+    )
